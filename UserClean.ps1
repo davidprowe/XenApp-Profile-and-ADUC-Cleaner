@@ -4,7 +4,7 @@ if ((Get-PSSnapin "Citrix.XenApp.Commands" -EA silentlycontinue) -eq $null) {
 	catch { write-error "Error loading XenApp Powershell snapin"; Return }
 }
 Import-Module ActiveDirectory
-
+$again = 'yes'
 # Change the below variables to suit your environment
 #==============================================================================================
 #Profile Servers
