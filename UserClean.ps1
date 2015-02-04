@@ -37,21 +37,30 @@ Get-XASession |?{$_.AccountName -match $name}|?{$_.Protocol -match "ica"}|Stop-X
 foreach ($server in $profileServers) {
         write-host  Closing Connection to $server
 		openfiles /disconnect /s $server /u $server\fileadmin /p password /a $name
-
-#
-
+}
 
 #==============================================================================================
 #Delete profiles on Profile Shares
 write-host "Deleting profiles on server $server please wait"
 foreach ($server in $ProfileServers) {
 	Foreach ($share in $ProfileShares){
+	#fix to not have root dir removed
+		$prof = "\\" + $server + "\" + $ProfileRoot + "\" + $share + "\"
+		$profname = "\\" + $server + "\" + $ProfileRoot + "\" + $share + "\" + $name
+		if ($prof -eq $profname)
+		{
+		write-host $profname
+		write-host do nothing
+		}
+		else{
 		Remove-Item \\$server\$ProfileRoot\$share\$name\ -force -recurse -erroraction 'silentlycontinue'
-		#write-host  \\$server\$ProfileRoot\$share\$name\
+		#write-host name
+		write-host  removing \\$server\$ProfileRoot\$share\$name
+		#write-host share
+		#write-host  \\$server\$ProfileRoot\$share\
 		}
 		}
 		}
-		
 		
 #===============================================================================================
 #remove homedrive then set it
@@ -89,20 +98,33 @@ Start-Process -Credential $cred C:\Windows\System32\WindowsPowerShell\v1.0\power
 #==============================================================================================
 #ask for AD Username of user account to fix.
 
-while (($name -eq $null) -or ($choice.ToLower() -eq "no") -or ($again.Tolower() -ne "no")){
-$name = Read-Host 'What is the username that you are fixing?'
+while (($name -eq $null) -or ($name -eq '') -or ($choice.ToLower() -eq "no")){
+if  ($again.Tolower() -eq "no")
+{exit}
+else{
+do {$name = Read-Host 'What is the username that you are fixing?'}
+while (($name -eq $null) -or ($name -eq ''))
 #verify ADUC user with first and last name
+try{
 write-host "Are you sure you want to perform user cleanup on" (Get-ADUser -identity $name).Name": " (Get-ADUser -identity $name).UserPrincipalName "?"
 $choice = Read-Host 'Yes, No, Cancel'
+}
+catch{
+$choice = 'no'
+}
 if (($choice.ToLower() -eq "yes") -or ($choice.ToLower() -eq "y")){
 	CleanUserAccount
-    cls
+	$i = 0
+    do {write-host *************
+	$i++}
+	while ( $I -le 19)
+	$name = ''
     write-host "Completed process."
     write-host "1. Logged off User"
     write-host "2. Close profile share usage"
     write-host "3. Deleted Profiles"
-    write-host "4. Fixed Home drive and removed Roaming Profile"
-	write-host "5. Copied common .ini files to the homedrive\Windows folder."
+    write-host "4. Fixed N drive and removed Roaming Profile"
+	write-host "5. Copied common .ini files to the N:\Windows folder."
     $again = read-host "Do you want to clean another account? Yes or No"
 	}
     elseif ($choice.ToLower() -eq "cancel"){
@@ -113,5 +135,5 @@ if (($choice.ToLower() -eq "yes") -or ($choice.ToLower() -eq "y")){
     Clear-Variable name
     }
     }
-
+}
 
